@@ -102,7 +102,7 @@ class exception(channel):
         return grequests.get('')
     def proc_res_impl(self, response):
         check(self.i, 'nick', self.i['roomid'])
-        check(self.i, 'title', self.i['platform'] + ':' + self.i['roomid'])
+        check(self.i, 'title', self.i['platform'] + ':' + self.i['nick'])
         check(self.i, 'area', self.i['platform'])
         check(self.i, 'logo', '')
         check(self.i, 'status', EXCEPTION)
