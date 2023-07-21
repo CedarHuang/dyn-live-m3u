@@ -6,29 +6,33 @@ import tomllib
 
 sys.setrecursionlimit(4096)
 
-toml = {
-    'status': {
-        'closed': '',
-        'live': '',
-        'blocked': '',
-        'exception': '',
-    },
-    're': {
-        'name': [],
-        'group': [],
-    },
-    'include': {
-        'm3u': {
-            'remote': [],
-        }
-    }
-}
+toml = {}
 with open('../config/%s.toml' % config_name, 'rb') as f:
-    toml.update(tomllib.load(f))
+    toml = tomllib.load(f)
+
+def check(dict, key, value):
+    if key not in dict:
+        dict[key] = value
+check(toml, 'status', {})
+check(toml['status'], 'closed', '')
+check(toml['status'], 'live', '')
+check(toml['status'], 'blocked', '')
+check(toml['status'], 'exception', '')
+check(toml, 're', {})
+check(toml['re'], 'name', [])
+check(toml['re'], 'group', [])
+check(toml, 'include', {})
+check(toml['include'], 'm3u', {})
+check(toml['include']['m3u'], 'remote', [])
+check(toml['include']['m3u'], 'local', [])
 
 r = grequests.map([grequests.get(url) for url in toml['include']['m3u']['remote']])
-for i in r:
-    for j in i.text.splitlines():
+includes = [i.text for i in r]
+for i in toml['include']['m3u']['local']:
+    with open('../config/%s' % i) as f:
+        includes.append(f.read())
+for i in includes:
+    for j in i.splitlines():
         info = re.search(r'^https?://[^/]+/([^/]+)/([^/]+)$', j)
         if info is not None:
             toml['channel'].append({
