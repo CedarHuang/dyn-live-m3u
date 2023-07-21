@@ -1,0 +1,59 @@
+# 各配置的格式字符串
+# {platform} 平台(字母形式)
+# {roomid}   房间号
+# {nick}     主播昵称
+# {title}    直播间标题
+# {area}     所在分区
+# {status}   直播间状态
+[format]
+# 频道名称
+name = '{status}{title}'
+# 频道分组
+group = '{status};⚙️{area};👤{nick}'
+# 频道播放地址
+[format.url]
+# 默认播放地址
+default = 'http://你的IP:端口/{platform}/{roomid}'
+# 平台特化播放地址, 如无特殊需求, 一般没有意义
+# bilibili = 'http://你的IP:端口/bilibili/{roomid}?platform=h5&line=first&quality=10000'
+
+# 频道不同状态的文案配置
+[status]
+closed = '❌未开播'
+live = '✅直播中'
+blocked = '🚫封禁'
+exception = '❗异常'
+
+# 各字段正则处理配置, 形如 'r"pattern", "repl"'
+[re]
+name = [
+    'r",", "，"',
+    'r"(?<=^❌)未开播", ""',
+    'r"(?<=^✅)直播中", ""',
+    'r"(?<=^🚫)封禁", ""',
+    'r"(?<=^❗)异常", ""',
+]
+group = ['r";;", ";"', 'r"^;|;$", ""']
+area = ['r" *\d+$", ""']
+
+# 引用已有m3u文件数据
+[include.m3u]
+# 远程引用
+# remote = ['https://raw.githubusercontent.com/CedarHuang/dyn-live-m3u/master/config/example.m3u']
+# 本地引用
+# local = ['example.m3u']
+
+# 频道简易配置方式, 形如 simple = 'platform:roomid'
+[[channel]]
+simple = 'douyu:3484'
+[[channel]]
+simple = 'bilibili:732'
+
+# 频道详细配置方式, 一般情况下没有意义, 或在想添加暂未支持平台时有所运用
+# [[channel]]
+# platform = 'youtube'
+# roomid = 'qaEdtM10kKg'
+# nick = 'Matchroom Multi Sport'
+# area = 'sport'
+# logo = 'https://yt3.ggpht.com/ytc/AOPolaTnpgKxpulbLGsce6GmJ6hsyTkpCyF9BHPO7yUY=s88-c-k-c0x00ffffff-no-rj'
+# status = ''
