@@ -101,11 +101,11 @@ class exception(channel):
     def gen_req(self):
         return grequests.get('')
     def proc_res_impl(self, response):
-        self.i['nick'] = self.i['roomid']
-        self.i['title'] = self.i['platform'] + ':' + self.i['roomid']
-        self.i['area'] = self.i['platform']
-        self.i['logo'] = ''
-        self.i['status'] = EXCEPTION
+        check(self.i, 'nick', self.i['roomid'])
+        check(self.i, 'title', self.i['platform'] + ':' + self.i['roomid'])
+        check(self.i, 'area', self.i['platform'])
+        check(self.i, 'logo', '')
+        check(self.i, 'status', EXCEPTION)
 
 class douyu(channel):
     def gen_req(self):
