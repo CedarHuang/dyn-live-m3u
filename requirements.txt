@@ -1,2 +1,2 @@
-web.py
-grequests
+web.py=0.62
+grequests=0.6.0
