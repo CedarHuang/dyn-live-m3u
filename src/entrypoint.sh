@@ -12,6 +12,7 @@ for file in "$FROM"/*; do
     filename=$(basename "$file")
     if [ ! -e "$TO/$filename" ]; then
         cp "$file" "$TO"
+        chmod 666 "$TO/$filename"
         echo "$filename does not exist, has been generated"
     fi
 done
