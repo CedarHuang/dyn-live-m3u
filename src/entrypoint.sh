@@ -3,9 +3,9 @@ cd /app/dyn-live-m3u
 update() {
     git pull
     pip install -r requirements.txt
+    cp ./src/* ..
 }
 update &
-cp ./src/* ..
 FROM="./config"
 TO="/config"
 for file in "$FROM"/*; do
