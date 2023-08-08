@@ -68,6 +68,7 @@ class channel:
         self.i = info
     def proc_res(self, response):
         global retry_deepth
+        # self.proc_res_impl(response)
         try:
             self.proc_res_impl(response)
         except:
@@ -133,17 +134,16 @@ class huya(channel):
 
 class bilibili(channel):
     def gen_req(self):
-        return grequests.get('https://live.bilibili.com/h5/' + self.i['roomid'], headers=headers)
+        return grequests.get('https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id=' + self.i['roomid'], headers=headers)
     def proc_res_impl(self, response):
-        info = json.loads(re.search(r'<script>window.__NEPTUNE_IS_MY_WAIFU__=(.*?)</script>', response.text).group(1))
-        init_info = info['roomInitRes']['data']
-        info = info['roomInfoRes']['data']
+        info = json.loads(response.text)
+        info = info['data']
         self.i['nick'] = info['anchor_info']['base_info']['uname']
         self.i['title'] = info['room_info']['title']
         self.i['area'] = info['room_info']['area_name']
         self.i['logo'] = info['anchor_info']['base_info']['face']
         self.i['status'] = LIVE if info['room_info']['live_status'] == 1 else CLOSED
-        self.i['status'] = BLOCKED if init_info['is_locked'] == True else self.i['status']
+        self.i['status'] = BLOCKED if info['block_info']['block'] == True else self.i['status']
 
 web.header('content-type', 'text/plain; charset=utf-8')
 res_body = '#EXTM3U\n'
