@@ -58,6 +58,9 @@ class channel:
             simple = info['simple'].split(':')
             info['platform'] = simple[0]
             info['roomid'] = simple[1]
+            for i in range(2, len(simple)):
+                if simple[i] == 'hide':
+                    info['hide'] = True
         except:
             pass
         try:
@@ -80,6 +83,8 @@ class channel:
                 exception(self.__dict__['i']).proc_res_impl(response)
         retry_deepth = 0
     def gen_m3u_item(self, toml):
+        if 'hide' in self.i and self.i['hide'] and self.i['status'] not in (LIVE, EXCEPTION):
+            return ''
         for key in toml['re']:
             for re_item in toml['re'][key]:
                 try:
