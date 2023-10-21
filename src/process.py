@@ -117,7 +117,7 @@ class douyu(channel):
     def gen_req(self):
         return grequests.get('https://m.douyu.com/' + self.i['roomid'], headers=headers)
     def proc_res_impl(self, response):
-        info = json.loads(re.search(r'<script id="vite-plugin-ssr_pageContext" type="application/json">(.*)</script>', response.text).group(1))
+        info = json.loads(re.search(r'<script id="vike_pageContext" type="application/json">(.*)</script>', response.text).group(1))
         info = info['pageProps']['room']['roomInfo']['roomInfo']
         self.i['nick'] = info['nickname']
         self.i['title'] = info['roomName']
