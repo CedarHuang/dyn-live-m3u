@@ -3,7 +3,6 @@ import json
 import re
 import sys
 import tomllib
-import streamlink
 
 sys.setrecursionlimit(4096)
 
