@@ -3,6 +3,7 @@ import json
 import re
 import sys
 import tomllib
+import streamlink
 
 sys.setrecursionlimit(4096)
 
@@ -21,6 +22,9 @@ check(toml['status'], 'exception', '')
 check(toml, 're', {})
 check(toml['re'], 'name', [])
 check(toml['re'], 'group', [])
+check(toml, 'proxies', {})
+check(toml['proxies'], 'http', '')
+check(toml['proxies'], 'https', '')
 check(toml, 'include', {})
 check(toml['include'], 'm3u', {})
 check(toml['include']['m3u'], 'remote', [])
@@ -44,6 +48,8 @@ CLOSED = toml['status']['closed']
 LIVE = toml['status']['live']
 BLOCKED = toml['status']['blocked']
 EXCEPTION = toml['status']['exception']
+
+proxies = toml['proxies']
 
 headers = {
     'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1'
@@ -115,7 +121,7 @@ class exception(channel):
 
 class douyu(channel):
     def gen_req(self):
-        return grequests.get('https://m.douyu.com/' + self.i['roomid'], headers=headers)
+        return grequests.get('https://m.douyu.com/' + self.i['roomid'], headers=headers, proxies=proxies)
     def proc_res_impl(self, response):
         info = json.loads(re.search(r'<script id="vike_pageContext" type="application/json">(.*)</script>', response.text).group(1))
         info = info['pageProps']['room']['roomInfo']['roomInfo']
@@ -127,7 +133,7 @@ class douyu(channel):
 
 class huya(channel):
     def gen_req(self):
-        return grequests.get('https://m.huya.com/' + self.i['roomid'], headers=headers)
+        return grequests.get('https://m.huya.com/' + self.i['roomid'], headers=headers, proxies=proxies)
     def proc_res_impl(self, response):
         info = json.loads(re.search(r'<script> window.HNF_GLOBAL_INIT = (.*) </script>', response.text).group(1))
         info = info['roomInfo']['tLiveInfo'] if info['roomInfo']['eLiveStatus'] != 1 else info['roomInfo']['tRecentLive']
@@ -139,7 +145,7 @@ class huya(channel):
 
 class bilibili(channel):
     def gen_req(self):
-        return grequests.get('https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id=' + self.i['roomid'], headers=headers)
+        return grequests.get('https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id=' + self.i['roomid'], headers=headers, proxies=proxies)
     def proc_res_impl(self, response):
         info = json.loads(response.text)
         info = info['data']
@@ -149,6 +155,26 @@ class bilibili(channel):
         self.i['logo'] = info['anchor_info']['base_info']['face']
         self.i['status'] = LIVE if info['room_info']['live_status'] == 1 else CLOSED
         self.i['status'] = BLOCKED if info['block_info']['block'] == True else self.i['status']
+
+class twitch(channel):
+    def gen_req(self):
+        return grequests.get('https://m.twitch.tv/' + self.i['roomid'], headers=headers, proxies=proxies)
+    def proc_res_impl(self, response):
+        info = json.loads(re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*)</script>', response.text).group(1))
+        info = info['props']['relayQueryRecords']
+        key = info['client:root']['user(login:\"%s\")' % self.i['roomid']]['__ref']
+        self.i['nick'] = info[key]['displayName']
+        self.i['logo'] = info[key]['profileImageURL(width:150)']
+        if info[key]['stream'] is None:
+            key = info[key]['broadcastSettings']['__ref']
+            self.i['title'] = info[key]['title']
+            self.i['area'] = info[info[key]['game']['__ref']]['displayName']
+            self.i['status'] = CLOSED
+        else:
+            key = info[key]['stream']['__ref']
+            self.i['title'] = info[info[key]['archiveVideo']['__ref']]['title']
+            self.i['area'] = info[info[key]['game']['__ref']]['displayName']
+            self.i['status'] = LIVE
 
 web.header('content-type', 'text/plain; charset=utf-8')
 res_body = '#EXTM3U\n'
