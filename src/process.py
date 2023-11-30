@@ -80,7 +80,7 @@ class channel:
         try:
             self.proc_res_impl(response)
         except:
-            if retry_deepth < retry_deepth_max:
+            if response != None and retry_deepth < retry_deepth_max:
                 retry_deepth += 1
                 response = grequests.map([grequests.get(response.url, headers=headers)])[0]
                 channel.gen(self.__dict__['i']).proc_res(response)
