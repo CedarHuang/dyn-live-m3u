@@ -28,6 +28,9 @@ check(toml, 'include', {})
 check(toml['include'], 'm3u', {})
 check(toml['include']['m3u'], 'remote', [])
 check(toml['include']['m3u'], 'local', [])
+check(toml['include']['toml'], 'remote', [])
+check(toml['include']['toml'], 'local', [])
+check(toml, 'channel', [])
 
 r = grequests.map([grequests.get(url) for url in toml['include']['m3u']['remote']])
 includes = [i.text for i in r]
@@ -42,6 +45,16 @@ for i in includes:
                 'platform': info.group(1),
                 'roomid': info.group(2),
             })
+
+r = grequests.map([grequests.get(url) for url in toml['include']['toml']['remote']])
+includes = [i.text for i in r]
+for i in toml['include']['toml']['local']:
+    with open('../config/%s' % i) as f:
+        includes.append(f.read())
+for i in includes:
+    include = tomllib.loads(i)
+    check(include, 'channel', [])
+    toml['channel'].extend(include['channel'])
 
 CLOSED = toml['status']['closed']
 LIVE = toml['status']['live']
@@ -76,7 +89,7 @@ class channel:
         self.i = info
     def proc_res(self, response):
         global retry_deepth
-        # self.proc_res_impl(response)
+        # return self.proc_res_impl(response)
         try:
             self.proc_res_impl(response)
         except:
@@ -134,13 +147,14 @@ class huya(channel):
     def gen_req(self):
         return grequests.get('https://m.huya.com/' + self.i['roomid'], headers=headers, proxies=proxies)
     def proc_res_impl(self, response):
-        info = json.loads(re.search(r'<script> window.HNF_GLOBAL_INIT = (.*) </script>', response.text).group(1))
-        info = info['roomInfo']['tLiveInfo'] if info['roomInfo']['eLiveStatus'] != 1 else info['roomInfo']['tRecentLive']
+        info = json.loads(re.search(r'<script> window.HNF_GLOBAL_INIT = (.*)"_proto"', response.text).group(1) + '}}}}}')
+        live_status = info['roomInfo']['eLiveStatus']
+        info = info['roomInfo']['tLiveInfo'] if live_status != 1 else info['roomInfo']['tRecentLive']
         self.i['nick'] = info['sNick']
         self.i['title'] = info['sIntroduction']
         self.i['area'] = info['sGameFullName']
         self.i['logo'] = info['sAvatar180']
-        self.i['status'] = LIVE if info['_classname'] == 'LiveRoom.LiveInfo' else CLOSED
+        self.i['status'] = LIVE if live_status != 1 else CLOSED
 
 class bilibili(channel):
     def gen_req(self):

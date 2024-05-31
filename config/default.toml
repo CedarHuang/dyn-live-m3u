@@ -48,6 +48,13 @@ area = ['r" *\d+$", ""']
 # 本地引用
 # local = ['example.m3u']
 
+# 引用其他toml的channel配置
+[include.toml]
+# 远程引用
+# remote = ['https://raw.githubusercontent.com/CedarHuang/dyn-live-m3u/master/config/second.toml']
+# 本地引用
+# local = ['second.toml']
+
 # 频道简易配置方式, 形如 simple = 'platform:roomid'
 [[channel]]
 simple = 'douyu:3484'

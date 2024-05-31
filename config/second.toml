@@ -7,6 +7,6 @@ default = 'http://allinone.go.to/{platform}/{roomid}'
 [[channel]]
 simple = 'douyu:3484'
 [[channel]]
-simple = 'huya:igxy520'
+simple = 'huya:15916883'
 [[channel]]
 simple = 'bilibili:4670738'
