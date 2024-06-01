@@ -17,6 +17,7 @@ def check(dict, key, value):
 check(toml, 'status', {})
 check(toml['status'], 'closed', '')
 check(toml['status'], 'live', '')
+check(toml['status'], 'loop', '')
 check(toml['status'], 'blocked', '')
 check(toml['status'], 'exception', '')
 check(toml, 're', {})
@@ -60,6 +61,7 @@ for i in includes:
 
 CLOSED = toml['status']['closed']
 LIVE = toml['status']['live']
+LOOP = toml['status']['loop']
 BLOCKED = toml['status']['blocked']
 EXCEPTION = toml['status']['exception']
 
@@ -114,7 +116,7 @@ class channel:
                 exception(self.__dict__['i']).proc_res_impl(response)
         retry_deepth = 0
     def gen_m3u_item(self, toml):
-        if 'hide' in self.i and self.i['hide'] and self.i['status'] not in (LIVE, EXCEPTION):
+        if 'hide' in self.i and self.i['hide'] and self.i['status'] not in (LIVE, LOOP, EXCEPTION):
             return ''
         for key in toml['re']:
             for re_item in toml['re'][key]:
@@ -146,15 +148,16 @@ class exception(channel):
 
 class douyu(channel):
     def gen_req(self):
-        return grequests.get('https://m.douyu.com/' + self.i['roomid'], headers=headers, proxies=proxies)
+        return grequests.get('https://www.douyu.com/betard/' + self.i['roomid'], headers=headers, proxies=proxies)
     def proc_res_impl(self, response):
-        info = json.loads(re.search(r'<script id="vike_pageContext" type="application/json">(.*)</script>', response.text).group(1))
-        info = info['pageProps']['room']['roomInfo']['roomInfo']
-        self.i['nick'] = info['nickname']
-        self.i['title'] = info['roomName']
-        self.i['area'] = info['cate2Name']
-        self.i['logo'] = info['avatar']
-        self.i['status'] = LIVE if info['isLive'] == 1 else CLOSED
+        info = json.loads(response.text)
+        # info = info['pageProps']['room']['roomInfo']['roomInfo']
+        self.i['nick'] = info['room']['nickname']
+        self.i['title'] = info['room']['room_name']
+        self.i['area'] = info['game']['tag_name']
+        self.i['logo'] = info['room']['avatar']['big']
+        self.i['status'] = LIVE if info['room']['show_status'] == 1 else CLOSED
+        self.i['status'] = LOOP if info['room']['videoLoop'] == 1 else self.i['status']
 
 class huya(channel):
     def gen_req(self):
