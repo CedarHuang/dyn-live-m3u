@@ -1,5 +1,6 @@
 import grequests
 import json
+import quickjs
 import re
 import sys
 import tomllib
@@ -70,6 +71,17 @@ headers = {
 
 retry_deepth_max = 2
 retry_deepth = 0
+
+def jsobject2json(str):
+    stringify = quickjs.Function(
+        "stringify",
+        """
+        function stringify() {{
+            object = {str};
+            return JSON.stringify(object);
+        }}
+        """.format(str = str))
+    return stringify(str)
 
 class channel:
     def gen(info):
@@ -148,7 +160,8 @@ class huya(channel):
     def gen_req(self):
         return grequests.get('https://m.huya.com/' + self.i['roomid'], headers=headers, proxies=proxies)
     def proc_res_impl(self, response):
-        info = json.loads(re.search(r'<script> window.HNF_GLOBAL_INIT = (.*)"_proto"', response.text).group(1) + '}}}}}')
+        info = re.search(r'<script> window.HNF_GLOBAL_INIT = (.*?) </script>', response.text, re.S).group(1)
+        info = json.loads(jsobject2json(info))
         live_status = info['roomInfo']['eLiveStatus']
         info = info['roomInfo']['tLiveInfo'] if live_status != 1 else info['roomInfo']['tRecentLive']
         self.i['nick'] = info['sNick']
