@@ -184,7 +184,7 @@ class bilibili(channel):
         self.i['area'] = info['room_info']['area_name']
         self.i['logo'] = info['anchor_info']['base_info']['face']
         self.i['status'] = LIVE if info['room_info']['live_status'] == 1 else CLOSED
-        self.i['status'] = BLOCKED if info['block_info']['block'] == True else self.i['status']
+        # self.i['status'] = BLOCKED if info['block_info']['block'] == True else self.i['status']
 
 class twitch(channel):
     def gen_req(self):
