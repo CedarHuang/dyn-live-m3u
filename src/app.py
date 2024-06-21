@@ -1,3 +1,5 @@
+import gevent
+gevent.get_hub()
 from gevent import monkey
 monkey.patch_all()
 
