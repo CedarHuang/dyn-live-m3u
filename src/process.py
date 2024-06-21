@@ -5,6 +5,9 @@ import re
 import sys
 import tomllib
 
+from requests import models
+from requests import exceptions
+
 sys.setrecursionlimit(4096)
 
 toml = {}
@@ -64,6 +67,7 @@ LIVE = toml['status']['live']
 LOOP = toml['status']['loop']
 BLOCKED = toml['status']['blocked']
 EXCEPTION = toml['status']['exception']
+TIMEOUT = toml['status']['timeout']
 
 proxies = toml['proxies']
 
@@ -73,6 +77,9 @@ headers = {
 
 retry_deepth_max = 2
 retry_deepth = 0
+
+time_limit = 5
+retry_time_limit = 3
 
 def jsobject2json(str):
     stringify = quickjs.Function(
@@ -108,15 +115,18 @@ class channel:
         try:
             self.proc_res_impl(response)
         except:
-            if response != None and retry_deepth < retry_deepth_max:
+            if type(response) != models.Response:
+                print(type(response))
+                print(response)
+            if type(response) == models.Response and retry_deepth < retry_deepth_max:
                 retry_deepth += 1
-                response = grequests.map([grequests.get(response.url, headers=headers)])[0]
+                response = grequests.map([grequests.get(response.url, headers=headers, proxies=proxies, timeout=retry_time_limit)])[0]
                 channel.gen(self.__dict__['i']).proc_res(response)
             else:
                 exception(self.__dict__['i']).proc_res_impl(response)
         retry_deepth = 0
     def gen_m3u_item(self, toml):
-        if 'hide' in self.i and self.i['hide'] and self.i['status'] not in (LIVE, LOOP, EXCEPTION):
+        if 'hide' in self.i and self.i['hide'] and self.i['status'] not in (LIVE, LOOP, EXCEPTION, TIMEOUT):
             return ''
         for key in toml['re']:
             for re_item in toml['re'][key]:
@@ -144,11 +154,11 @@ class exception(channel):
         check(self.i, 'title', self.i['platform'] + ':' + self.i['nick'])
         check(self.i, 'area', self.i['platform'])
         check(self.i, 'logo', '')
-        check(self.i, 'status', EXCEPTION)
+        check(self.i, 'status', TIMEOUT if isinstance(response, exceptions.Timeout) else EXCEPTION)
 
 class douyu(channel):
     def gen_req(self):
-        return grequests.get('https://www.douyu.com/betard/' + self.i['roomid'], headers=headers, proxies=proxies)
+        return grequests.get('https://www.douyu.com/betard/' + self.i['roomid'], headers=headers, proxies=proxies, timeout=time_limit)
     def proc_res_impl(self, response):
         info = json.loads(response.text)
         # info = info['pageProps']['room']['roomInfo']['roomInfo']
@@ -161,7 +171,7 @@ class douyu(channel):
 
 class huya(channel):
     def gen_req(self):
-        return grequests.get('https://m.huya.com/' + self.i['roomid'], headers=headers, proxies=proxies)
+        return grequests.get('https://m.huya.com/' + self.i['roomid'], headers=headers, proxies=proxies, timeout=time_limit)
     def proc_res_impl(self, response):
         info = re.search(r'<script> window.HNF_GLOBAL_INIT = (.*?) </script>', response.text, re.S).group(1)
         info = json.loads(jsobject2json(info))
@@ -175,7 +185,7 @@ class huya(channel):
 
 class bilibili(channel):
     def gen_req(self):
-        return grequests.get('https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id=' + self.i['roomid'], headers=headers, proxies=proxies)
+        return grequests.get('https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id=' + self.i['roomid'], headers=headers, proxies=proxies, timeout=time_limit)
     def proc_res_impl(self, response):
         info = json.loads(response.text)
         info = info['data']
@@ -188,7 +198,7 @@ class bilibili(channel):
 
 class twitch(channel):
     def gen_req(self):
-        return grequests.get('https://m.twitch.tv/' + self.i['roomid'], headers=headers, proxies=proxies)
+        return grequests.get('https://m.twitch.tv/' + self.i['roomid'], headers=headers, proxies=proxies, timeout=time_limit)
     def proc_res_impl(self, response):
         info = json.loads(re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*)</script>', response.text).group(1))
         info = info['props']['relayQueryRecords']
@@ -209,6 +219,6 @@ class twitch(channel):
 web.header('content-type', 'text/plain; charset=utf-8')
 res_body = '#EXTM3U\n'
 channels = [channel.gen(i) for i in toml['channel']]
-responses = grequests.map([i.gen_req() for i in channels])
+responses = grequests.map([i.gen_req() for i in channels], exception_handler=lambda _, e: e)
 [channel.proc_res(response) for (channel, response) in list(zip(channels, responses))]
 res_body += ''.join([channel.gen_m3u_item(toml) for channel in channels])
