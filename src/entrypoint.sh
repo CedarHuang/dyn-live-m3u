@@ -17,4 +17,4 @@ for file in "$FROM"/*; do
     fi
 done
 cd /app
-python app.py 3658
+python app.py

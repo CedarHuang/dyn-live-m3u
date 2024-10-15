@@ -1,28 +1,28 @@
-import gevent
-gevent.get_hub()
-from gevent import monkey
-monkey.patch_all()
+import sys
+sys.setrecursionlimit(4096)
 
 import web
+from gevent.pywsgi import WSGIServer
+
+import m3u
 
 class skip:
     def GET(self):
         return
 
-class process:
+class m3u_entry:
     def GET(self, config_name):
         if not config_name:
             config_name = 'default'
-        local = {'web': web, 'config_name': config_name}
-        with open('process.py') as f:
-            exec(f.read(), local)
-        return local['res_body']
+        web.header('content-type', 'text/plain; charset=utf-8')
+        return m3u.process(config_name)
 
 urls = (
     '/favicon.ico', 'skip',
-    '/(.*)', 'process',
+    '/(.*)', 'm3u_entry',
 )
 
 app = web.application(urls, globals())
 if __name__ == "__main__":
-    app.run() # port: 3658
+    print('http://0.0.0.0:3658/')
+    WSGIServer(('0.0.0.0', 3658), app.wsgifunc()).serve_forever()
