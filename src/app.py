@@ -19,6 +19,8 @@ class m3u_entry:
         return m3u.process(config_name)
 
 class url_entry:
+    def HEAD(*_):
+        return web.notfound()
     def GET(self, platform, roomid):
         u = url.process(platform, roomid) 
         if not u:
