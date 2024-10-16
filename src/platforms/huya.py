@@ -1,6 +1,7 @@
 import grequests
 import json
 import re
+import streamlink
 
 import config
 from platforms.channel import channel
@@ -19,3 +20,9 @@ class huya(channel):
         self.i['area'] = info['sGameFullName']
         self.i['logo'] = info['sAvatar180']
         self.i['status'] = config.LIVE if live_status != 1 else config.CLOSED
+    def get_live_url(roomid):
+        session = streamlink.Streamlink()
+        if 'http' in config.proxies and config.proxies['http'] != '':
+            session.set_option('http-proxy', config.proxies['http'])
+        streams = session.streams(f'https://huya.com/{roomid}')
+        return streams['best'].url

@@ -5,6 +5,7 @@ import web
 from gevent.pywsgi import WSGIServer
 
 import m3u
+import url
 
 class skip:
     def GET(self):
@@ -17,9 +18,17 @@ class m3u_entry:
         web.header('content-type', 'text/plain; charset=utf-8')
         return m3u.process(config_name)
 
+class url_entry:
+    def GET(self, platform, roomid):
+        u = url.process(platform, roomid) 
+        if not u:
+            return web.notfound()
+        return web.seeother(u)
+
 urls = (
     '/favicon.ico', 'skip',
-    '/(.*)', 'm3u_entry',
+    '/([^/]*)', 'm3u_entry',
+    '/([^/]+)/([^/]+)', 'url_entry',
 )
 
 app = web.application(urls, globals())

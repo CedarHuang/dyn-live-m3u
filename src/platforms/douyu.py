@@ -1,5 +1,6 @@
 import grequests
 import json
+import streamlink
 
 import config
 from platforms.channel import channel
@@ -16,3 +17,10 @@ class douyu(channel):
         self.i['logo'] = info['room']['avatar']['big']
         self.i['status'] = config.LIVE if info['room']['show_status'] == 1 else config.CLOSED
         self.i['status'] = config.LOOP if info['room']['videoLoop'] == 1 else self.i['status']
+    def get_live_url(roomid):
+        session = streamlink.Streamlink()
+        session.plugins.load_path("streamlink_plugins/streamlink-plugin-for-douyu")
+        if 'http' in config.proxies and config.proxies['http'] != '':
+            session.set_option('http-proxy', config.proxies['http'])
+        streams = session.streams(f'https://douyu.com/{roomid}')
+        return streams['best'].url
