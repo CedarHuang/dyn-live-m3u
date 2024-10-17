@@ -1,7 +1,7 @@
 import grequests
 import json
 
-import config
+from config import config
 from platforms.channel import channel
 
 class bilibili(channel):

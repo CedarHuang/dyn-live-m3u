@@ -4,8 +4,8 @@ import re
 from requests import models
 from requests import exceptions
 
-import config
 import platforms
+from config import config
 from utils import check
 
 retry_deepth_max = 2

@@ -2,7 +2,7 @@ import grequests
 import json
 import streamlink
 
-import config
+from config import config
 from platforms.channel import channel
 
 class douyu(channel):

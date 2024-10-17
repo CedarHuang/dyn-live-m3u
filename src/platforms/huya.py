@@ -3,7 +3,7 @@ import json
 import re
 import streamlink
 
-import config
+from config import config
 from platforms.channel import channel
 from utils import jsobject2json
 

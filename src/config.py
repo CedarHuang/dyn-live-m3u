@@ -1,39 +1,13 @@
 import grequests
+import threading
 import tomllib
 import re
 
 from utils import check
 
-toml = {}
-proxies = {}
-request_params = {}
-
-CLOSED = ''
-LIVE = ''
-LOOP = ''
-BLOCKED = ''
-EXCEPTION = ''
-TIMEOUT = ''
-
-headers = {
-    'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1'
-}
-
-time_limit = 5
-retry_time_limit = 3
+config = threading.local()
 
 def init(config_name):
-    global toml
-    global proxies
-    global request_params
-
-    global CLOSED
-    global LIVE
-    global LOOP
-    global BLOCKED
-    global EXCEPTION
-    global TIMEOUT
-
     with open('../config/%s.toml' % config_name, 'rb') as f:
         toml = tomllib.load(f)
 
@@ -83,16 +57,24 @@ def init(config_name):
         check(include, 'channel', [])
         toml['channel'].extend(include['channel'])
 
-    proxies = toml['proxies']
-    request_params = {
-        'headers': headers,
-        'proxies': proxies,
-        'timeout': time_limit,
+    config.headers = {
+        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.3 Mobile/15E148 Safari/604.1'
     }
 
-    CLOSED = toml['status']['closed']
-    LIVE = toml['status']['live']
-    LOOP = toml['status']['loop']
-    BLOCKED = toml['status']['blocked']
-    EXCEPTION = toml['status']['exception']
-    TIMEOUT = toml['status']['timeout']
+    config.time_limit = 5
+    config.retry_time_limit = 3
+
+    config.toml = toml
+    config.proxies = toml['proxies']
+    config.request_params = {
+        'headers': config.headers,
+        'proxies': config.proxies,
+        'timeout': config.time_limit,
+    }
+
+    config.CLOSED = toml['status']['closed']
+    config.LIVE = toml['status']['live']
+    config.LOOP = toml['status']['loop']
+    config.BLOCKED = toml['status']['blocked']
+    config.EXCEPTION = toml['status']['exception']
+    config.TIMEOUT = toml['status']['timeout']
