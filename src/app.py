@@ -1,39 +1,33 @@
 import sys
 sys.setrecursionlimit(4096)
 
-import web
-from gevent.pywsgi import WSGIServer
+import bottle
+from gevent import monkey
+monkey.patch_all()
 
 import m3u
 import url
 
-class skip:
-    def GET(self):
-        return
+app = bottle.Bottle()
 
-class m3u_entry:
-    def GET(self, config_name):
-        if not config_name:
-            config_name = 'default'
-        web.header('content-type', 'text/plain; charset=utf-8')
-        return m3u.process(config_name)
+@app.route('/favicon.ico')
+def skip():
+    return None
 
-class url_entry:
-    def HEAD(*_):
-        return web.notfound()
-    def GET(self, platform, roomid):
-        u = url.process(platform, roomid) 
-        if not u:
-            return web.notfound()
-        return web.seeother(u)
+@app.route('/')
+@app.route('/<config_name>')
+def m3u_entry(config_name='default'):
+    bottle.response.content_type = 'text/plain; charset=utf-8'
+    return m3u.process(config_name)
 
-urls = (
-    '/favicon.ico', 'skip',
-    '/([^/]*)', 'm3u_entry',
-    '/([^/]+)/([^/]+)', 'url_entry',
-)
+@app.route('/<platform>/<roomid>')
+def url_entry(platform, roomid):
+    if bottle.request.method == 'HEAD':
+        bottle.abort(404)
+    res = url.process(platform, roomid)
+    if not res:
+        bottle.abort(404)
+    bottle.redirect(res)
 
-app = web.application(urls, globals())
 if __name__ == "__main__":
-    print('http://0.0.0.0:3658/')
-    WSGIServer(('0.0.0.0', 3658), app.wsgifunc()).serve_forever()
+    bottle.run(app, host='0.0.0.0', port=3658, server='gevent')

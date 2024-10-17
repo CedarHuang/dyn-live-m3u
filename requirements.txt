@@ -1,5 +1,6 @@
-web.py==0.62
+gevent==24.2
+bottle==0.13
 grequests==0.6.0
-quickjs==1.19.4
-jsengine==1.0.7
 streamlink==6.11
+jsengine==1.0.7
+quickjs==1.19.4
