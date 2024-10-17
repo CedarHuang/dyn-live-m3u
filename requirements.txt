@@ -1,6 +1,6 @@
-gevent==24.2
-bottle==0.13
+gevent==24.2.1
+bottle==0.13.2
 grequests==0.6.0
-streamlink==6.11
+streamlink==6.11.0
 jsengine==1.0.7
 quickjs==1.19.4
