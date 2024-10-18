@@ -15,7 +15,7 @@ group = '{status};⚙️{area};👤{nick}'
 # 默认播放地址
 default = 'http://你的IP:端口/{platform}/{roomid}'
 # 平台特化播放地址, 如无特殊需求, 一般没有意义
-# bilibili = 'http://你的IP:端口/bilibili/{roomid}?platform=h5&line=first&quality=10000'
+# bilibili = 'https://www.goodiptv.club/{platform}/{roomid}'
 
 # 频道不同状态的文案配置
 [status]
@@ -59,9 +59,9 @@ area = ['r" *\d+$", ""']
 # 本地引用
 # local = ['second.toml']
 
-# 频道简易配置方式, 形如 simple = 'platform:roomid'
+# 频道简易配置方式, 形如 simple = 'platform:roomid(:hide)', 若配置了hide, 则频道在未开播时自动隐藏
 [[channel]]
-simple = 'douyu:3484'
+simple = 'douyu:3484:hide'
 [[channel]]
 simple = 'bilibili:732'
 

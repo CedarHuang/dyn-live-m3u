@@ -1,32 +1,37 @@
 import grequests
 import json
-import re
 import streamlink
 
 from config import config
 from platforms.channel import channel
 
-# 已失效
-
 class twitch(channel):
     def gen_req(self):
-        return grequests.get('https://m.twitch.tv/' + self.i['roomid'], **config.request_params)
+        data = {
+            'operationName': 'MwebChannelLiveQuery',
+            'variables': {
+                'login': self.i['roomid'],
+                'includeIsDJ': True,
+            },
+            'extensions': {
+                'persistedQuery': {
+                    'version': 1,
+                    'sha256Hash': 'cfe04840f42b3a693d1de935ab8ebcb8d85857ac20dd8ce3001d6fa14eae97ec',
+                }
+            }
+        }
+        headers = {
+            'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko',
+        }
+        return grequests.post('https://gql.twitch.tv/gql', json=data, headers=headers, proxies=config.proxies)
     def proc_res_impl(self, response):
-        info = json.loads(re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*)</script>', response.text).group(1))
-        info = info['props']['relayQueryRecords']
-        key = info['client:root']['user(login:\"%s\")' % self.i['roomid']]['__ref']
-        self.i['nick'] = info[key]['displayName']
-        self.i['logo'] = info[key]['profileImageURL(width:150)']
-        if info[key]['stream'] is None:
-            key = info[key]['broadcastSettings']['__ref']
-            self.i['title'] = info[key]['title']
-            self.i['area'] = info[info[key]['game']['__ref']]['displayName']
-            self.i['status'] = config.CLOSED
-        else:
-            key = info[key]['stream']['__ref']
-            self.i['title'] = info[info[key]['archiveVideo']['__ref']]['title']
-            self.i['area'] = info[info[key]['game']['__ref']]['displayName']
-            self.i['status'] = config.LIVE
+        info = json.loads(response.text)
+        info = info['data']['channel']
+        self.i['nick'] = info['displayName']
+        self.i['title'] = info['broadcastSettings']['title']
+        self.i['area'] = info['broadcastSettings']['game']['displayName']
+        self.i['logo'] = info['profileImageURL']
+        self.i['status'] = config.LIVE if info['stream'] else config.CLOSED
     def get_live_url(roomid):
         session = streamlink.Streamlink()
         if 'http' in config.proxies and config.proxies['http'] != '':

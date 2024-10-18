@@ -2,7 +2,7 @@
 name = '{title}'
 group = '{nick}'
 [format.url]
-default = 'http://allinone.go.to/{platform}/{roomid}'
+default = 'http://Docker宿主机IP:3658/{platform}/{roomid}'
 
 [[channel]]
 simple = 'douyu:3484'

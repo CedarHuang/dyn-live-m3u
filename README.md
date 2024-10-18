@@ -1,9 +1,9 @@
 # dyn-live-m3u
 可自定义的直播m3u文件生成服务
 
-本项目仅能动态获取房间信息并生成m3u, 而不具有解析房间真实播放链接的能力, 建议搭配 [youshandefeiyang/LiveRedirect](https://github.com/youshandefeiyang/LiveRedirect/tree/main/Golang) 使用.
+本项目能动态获取房间信息并生成m3u, 并具有解析房间真实播放链接的能力.
 
-目前仅支持 斗鱼, 虎牙, B站.
+目前仅支持 bilibili, douyu, huya, twitch.
 
 尽管已经采取了并发请求设计, 但因为需要获取每个房间的信息, 所以如果配置频道过多的话, 响应速度会严重减慢, 故并不建议配置太多频道, 只按需配置平时常看的就好.
 
@@ -34,7 +34,7 @@ docker run -d -p 3658:3658 -v 本地挂载config路径:/config cedarhuang/dyn-li
 git clone https://github.com/CedarHuang/dyn-live-m3u.git
 cd dyn-live-m3u/src
 pip3.11 install -r ../requirements.txt
-python3.11 app.py 3658
+python3.11 app.py
 ```
 
 ## 配置
@@ -45,7 +45,9 @@ Docker启动后会自动在挂载的config路径中生成 `default.toml`,
 ```toml
 default = 'http://你的IP:端口/{platform}/{roomid}'
 ```
-将 `"你的IP:端口"` 修改为自己部署的 [youshandefeiyang/LiveRedirect](https://github.com/youshandefeiyang/LiveRedirect/tree/main/Golang) 的IP与端口.
+将 `"你的IP:端口"` 修改为解析链接服务的IP与端口.
+
+如Docker部署的本服务, 可配置为 ```Docker宿主机IP:3658```.
 
 ### 频道配置
 找到 `default.toml` 中的:
