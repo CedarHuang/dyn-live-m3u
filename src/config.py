@@ -11,6 +11,11 @@ def init(config_name):
     with open('../config/%s.toml' % config_name, 'rb') as f:
         toml = tomllib.load(f)
 
+    check(toml, 'proxies', {})
+    check(toml['proxies'], 'http', '')
+    check(toml['proxies'], 'https', '')
+    check(toml, 'url', {})
+    check(toml['url'], 'option', {})
     check(toml, 'status', {})
     check(toml['status'], 'closed', '')
     check(toml['status'], 'live', '')
@@ -21,9 +26,6 @@ def init(config_name):
     check(toml, 're', {})
     check(toml['re'], 'name', [])
     check(toml['re'], 'group', [])
-    check(toml, 'proxies', {})
-    check(toml['proxies'], 'http', '')
-    check(toml['proxies'], 'https', '')
     check(toml, 'include', {})
     check(toml['include'], 'm3u', {})
     check(toml['include']['m3u'], 'remote', [])

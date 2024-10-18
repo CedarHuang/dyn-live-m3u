@@ -17,6 +17,15 @@ default = 'http://你的IP:端口/{platform}/{roomid}'
 # 平台特化播放地址, 如无特殊需求, 一般没有意义
 # bilibili = 'https://www.goodiptv.club/{platform}/{roomid}'
 
+# 代理配置
+# [proxies]
+# http = 'http://127.0.0.1:7890'
+# https = 'http://127.0.0.1:7890'
+
+# 使用streamlink解析直播流链接时的option, http-proxy会根据[proxies]自动填充
+# [url.option.twitch]
+# http-headers = 'Authorization=OAuth鉴权' # 配置鉴权信息可以跳过twitch流中的广告
+
 # 频道不同状态的文案配置
 [status]
 closed = '❌未开播'
@@ -39,11 +48,6 @@ name = [
 ]
 group = ['r";;", ";"', 'r"^;|;$", ""']
 area = ['r" *\d+$", ""']
-
-# 代理配置
-# [proxies]
-# http = 'http://127.0.0.1:7890'
-# https = 'http://127.0.0.1:7890'
 
 # 引用已有m3u文件数据
 [include.m3u]

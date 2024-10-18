@@ -2,6 +2,7 @@ import grequests
 import json
 import streamlink
 
+import utils
 from config import config
 from platforms.channel import channel
 
@@ -34,8 +35,6 @@ class twitch(channel):
         self.i['status'] = config.LIVE if info['stream'] else config.CLOSED
     def get_live_url(roomid):
         session = streamlink.Streamlink()
-        if 'http' in config.proxies and config.proxies['http'] != '':
-            session.set_option('http-proxy', config.proxies['http'])
-        # session.set_option('http-headers', 'Authorization=OAuth鉴权')
+        utils.streamlink_add_options(session, config, __class__.__name__)
         streams = session.streams(f'https://twitch.tv/{roomid}')
         return streams['best'].url

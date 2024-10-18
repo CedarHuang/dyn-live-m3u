@@ -2,6 +2,7 @@ import grequests
 import json
 import streamlink
 
+import utils
 from config import config
 from platforms.channel import channel
 
@@ -19,8 +20,7 @@ class douyu(channel):
         self.i['status'] = config.LOOP if info['room']['videoLoop'] == 1 else self.i['status']
     def get_live_url(roomid):
         session = streamlink.Streamlink()
+        utils.streamlink_add_options(session, config, __class__.__name__)
         session.plugins.load_path("streamlink_plugins/streamlink-plugin-for-douyu")
-        if 'http' in config.proxies and config.proxies['http'] != '':
-            session.set_option('http-proxy', config.proxies['http'])
         streams = session.streams(f'https://douyu.com/{roomid}')
         return streams['best'].url
