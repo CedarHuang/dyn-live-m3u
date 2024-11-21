@@ -30,7 +30,10 @@ class twitch(channel):
         info = info['data']['channel']
         self.i['nick'] = info['displayName']
         self.i['title'] = info['broadcastSettings']['title']
-        self.i['area'] = info['broadcastSettings']['game']['displayName']
+        if info['broadcastSettings']['game'] is not None:
+            self.i['area'] = info['broadcastSettings']['game']['displayName']
+        else:
+            self.i['area'] = 'NONE'
         self.i['logo'] = info['profileImageURL']
         self.i['status'] = config.LIVE if info['stream'] else config.CLOSED
     def get_live_url(roomid):
