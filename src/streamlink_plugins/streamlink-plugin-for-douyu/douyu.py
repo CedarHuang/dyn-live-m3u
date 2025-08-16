@@ -175,7 +175,7 @@ class Douyu(Plugin):
         else:
             crypto_js = (self.session.http.get(
                 # url='https://cdn.staticfile.org/crypto-js/4.1.1/crypto-js.min.js',
-                url='https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/crypto-js/4.1.1/crypto-js.min.js',
+                url='https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js',
                 timeout=5
             )).text
             self.cache.set(key2, crypto_js)
