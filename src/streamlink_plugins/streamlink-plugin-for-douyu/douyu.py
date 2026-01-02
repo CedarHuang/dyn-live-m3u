@@ -50,6 +50,7 @@ class Douyu(Plugin):
                         validate.regex(re.compile(r'\$ROOM\.room_id\s*=\s*(\d+)')),
                         validate.regex(re.compile(r'apm_room_id\s*=\s*(\d+)')),
                         validate.regex(re.compile(r'data-room-id="(\d+)"')),
+                        validate.regex(re.compile(r'roomID\s*[:=]\s*(\d+)')),
                     ),
                     validate.get(1)
                 ))
