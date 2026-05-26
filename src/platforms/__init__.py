@@ -15,7 +15,10 @@ def gen_channel(info):
     except:
         pass
     try:
-        return eval('{0}.{0}(info)'.format(info['platform']))
+        platform = info['platform']
+        module = globals()[platform]
+        cls = getattr(module, platform)
+        return cls(info)
     except:
         print('Platform not yet supported.')
         return channel.exception(info)
