@@ -1,11 +1,11 @@
 import grequests
-import threading
 import tomllib
 import re
 
+from gevent.local import local
 from utils import check
 
-config = threading.local()
+config = local()
 
 def init(config_name):
     with open('../config/%s.toml' % config_name, 'rb') as f:
