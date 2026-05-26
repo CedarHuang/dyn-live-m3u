@@ -21,7 +21,7 @@ class bilibili(channel):
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
         }
         response = grequests.map([
-            grequests.get(f'https://api.live.bilibili.com/room/v1/Room/playUrl?cid={roomid}&platform=hls&otype=json&quality=4', headers=headers)
+            grequests.get(f'https://api.live.bilibili.com/room/v1/Room/playUrl?cid={roomid}&platform=hls&otype=json&quality=4', headers=headers, proxies=config.proxies)
         ])[0]
         info = json.loads(response.text)
         return info['data']['durl'][-1]['url']

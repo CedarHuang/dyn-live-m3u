@@ -36,7 +36,7 @@ def init(config_name):
     check(toml, 'channel', [])
 
     r = grequests.map([grequests.get(url) for url in toml['include']['m3u']['remote']])
-    includes = [i.text for i in r]
+    includes = [i.text for i in r if i is not None]
     for i in toml['include']['m3u']['local']:
         with open('../config/%s' % i) as f:
             includes.append(f.read())
@@ -50,7 +50,7 @@ def init(config_name):
                 })
 
     r = grequests.map([grequests.get(url) for url in toml['include']['toml']['remote']])
-    includes = [i.text for i in r]
+    includes = [i.text for i in r if i is not None]
     for i in toml['include']['toml']['local']:
         with open('../config/%s' % i) as f:
             includes.append(f.read())
