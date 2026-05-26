@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dyn-live-m3u</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f5; color: #333; padding: 20px; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 20px; margin-bottom: 16px; }
+.top-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.top-bar select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+.top-bar a { font-size: 13px; color: #4a90d9; text-decoration: none; }
+.top-bar a:hover { text-decoration: underline; }
+.card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.btn { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+.btn-primary { background: #4a90d9; color: #fff; }
+.btn-primary:hover { background: #3a7bc8; }
+.btn-sm { padding: 3px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 3px; cursor: pointer; background: #fff; }
+.btn-sm:hover { background: #f0f0f0; }
+.btn-sm.danger { color: #e74c3c; border-color: #e74c3c; }
+.btn-sm.danger:hover { background: #fde8e8; }
+.btn-icon { padding: 3px 6px; font-size: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+th { color: #888; font-weight: 500; font-size: 12px; white-space: nowrap; }
+.platform-tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; color: #fff; }
+.platform-douyu { background: #e67e22; }
+.platform-bilibili { background: #00a1d6; }
+.platform-huya { background: #f90; }
+.platform-twitch { background: #9146ff; }
+.badge { font-size: 11px; color: #999; }
+.disabled td { color: #bbb; }
+.drag-handle { cursor: grab; color: #ccc; user-select: none; }
+.drag-handle:active { cursor: grabbing; }
+.dragging { opacity: 0.4; }
+.drop-marker td { border-bottom: 2px solid #4a90d9 !important; }
+.empty { text-align: center; color: #999; padding: 32px 0; }
+.toggle { display: inline-block; width: 36px; height: 20px; position: relative; vertical-align: middle; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle .slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 10px; transition: background .2s; }
+.toggle .slider::before { content: ''; position: absolute; height: 14px; width: 14px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
+.toggle input:checked + .slider { background: #4a90d9; }
+.toggle input:checked + .slider::before { transform: translateX(16px); }
+
+/* modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 100; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 8px; padding: 24px; min-width: 360px; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+.modal h2 { font-size: 18px; margin-bottom: 16px; }
+.modal .field { margin-bottom: 12px; }
+.modal label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; }
+.modal select, .modal input[type=text], .modal input[type=number] { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+.modal .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #333; }
+.modal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>dyn-live-m3u</h1>
+
+<div class="top-bar">
+  <select id="config-select" onchange="switchConfig()"></select>
+  <a id="m3u-link" href="#" target="_blank">M3U 预览</a>
+</div>
+
+<div class="card">
+  <div class="toolbar">
+    <span id="channel-count"></span>
+    <button class="btn btn-primary" onclick="openAdd()">添加频道</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:24px"></th>
+        <th style="width:32px">#</th>
+        <th style="width:180px">频道名</th>
+        <th style="width:72px">平台</th>
+        <th style="width:96px">房间号</th>
+        <th style="width:56px">隐藏</th>
+        <th style="width:56px">启用</th>
+        <th style="width:88px">操作</th>
+      </tr>
+    </thead>
+    <tbody id="list"></tbody>
+  </table>
+  <div class="empty" id="empty">暂无频道</div>
+</div>
+
+<!-- modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title"></h2>
+    <input type="hidden" id="modal-index">
+    <div class="field">
+      <label>平台</label>
+      <select id="modal-platform">
+        <option value="douyu">斗鱼</option>
+        <option value="bilibili">B站</option>
+        <option value="huya">虎牙</option>
+        <option value="twitch">Twitch</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>房间号</label>
+      <input id="modal-roomid" type="text">
+    </div>
+    <div class="field">
+      <label>频道名</label>
+      <input id="modal-name" type="text" placeholder="可选">
+    </div>
+    <div class="field">
+      <label class="checkbox-label"><input id="modal-hide" type="checkbox"> 未开播时隐藏</label>
+    </div>
+    <div class="field">
+      <label class="checkbox-label"><input id="modal-enabled" type="checkbox" checked> 启用</label>
+    </div>
+    <div class="field" id="modal-index-row">
+      <label>插入位置（留空追加到末尾）</label>
+      <input id="modal-index-val" type="number" placeholder="末尾">
+    </div>
+    <div class="actions">
+      <button class="btn-sm" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" id="modal-save" onclick="saveChannel()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- confirm modal -->
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="modal" style="min-width:280px; text-align:center;">
+    <p id="confirm-msg" style="margin-bottom:20px; font-size:15px;"></p>
+    <div class="actions" style="justify-content:center;">
+      <button class="btn-sm" onclick="closeConfirm()">取消</button>
+      <button class="btn btn-primary" id="confirm-ok" style="background:#e74c3c;">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentConfig = 'default';
+let channels = [];
+let dragIdx = -1;
+
+async function loadConfigs() {
+  const r = await fetch('/api/_');
+  const configs = await r.json();
+  const sel = document.getElementById('config-select');
+  sel.innerHTML = configs.map(c =>
+    `<option value="${c}" ${c === currentConfig ? 'selected' : ''}>${c}.toml</option>`
+  ).join('');
+  if (configs.length > 0) currentConfig = configs.includes('default') ? 'default' : configs[0];
+  refresh();
+}
+
+function switchConfig() {
+  currentConfig = document.getElementById('config-select').value;
+  refresh();
+}
+
+function refresh() {
+  document.getElementById('config-select').value = currentConfig;
+  document.getElementById('m3u-link').href = '/' + currentConfig;
+  fetchList();
+}
+
+async function fetchList() {
+  const r = await fetch('/api/' + currentConfig);
+  channels = await r.json();
+  render();
+}
+
+function platformName(p) {
+  return {douyu:'斗鱼', bilibili:'B站', huya:'虎牙', twitch:'Twitch'}[p] || p;
+}
+
+function render() {
+  const list = document.getElementById('list');
+  const empty = document.getElementById('empty');
+  const count = document.getElementById('channel-count');
+  count.textContent = channels.length + ' 个频道';
+  empty.style.display = channels.length ? 'none' : '';
+
+  list.innerHTML = channels.map((ch, i) => `
+      <tr class="${ch.enabled ? '' : 'disabled'}">
+        <td class="drag-handle" title="拖动排序" onmousedown="_onDragDown(event, ${i})">&#9776;</td>
+      <td>${i + 1}</td>
+      <td>${esc(ch.name) || '-'}</td>
+      <td><span class="platform-tag platform-${ch.platform}">${platformName(ch.platform)}</span></td>
+      <td>${esc(ch.roomid)}</td>
+      <td>${ch.hide ? '<span class="badge">隐藏</span>' : ''}</td>
+      <td>
+        <label class="toggle" onclick="event.stopPropagation()">
+          <input type="checkbox" ${ch.enabled ? 'checked' : ''} onchange="toggleChannel(${i}, this.checked)">
+          <span class="slider"></span>
+        </label>
+      </td>
+      <td>
+        <button class="btn-sm" onclick="openEdit(${i})">编辑</button>
+        <button class="btn-sm danger" onclick="confirmDelete(${i})">删除</button>
+      </td>
+    </tr>`).join('');
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// --- modal ---
+
+function openAdd() {
+  document.getElementById('modal-title').textContent = '添加频道';
+  document.getElementById('modal-index').value = '';
+  document.getElementById('modal-platform').value = 'douyu';
+  document.getElementById('modal-roomid').value = '';
+  document.getElementById('modal-name').value = '';
+  document.getElementById('modal-hide').checked = false;
+  document.getElementById('modal-enabled').checked = true;
+  document.getElementById('modal-index-row').style.display = '';
+  document.getElementById('modal-index-val').value = '';
+  document.getElementById('modal-save').textContent = '添加';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function openEdit(i) {
+  const ch = channels[i];
+  document.getElementById('modal-title').textContent = '编辑频道';
+  document.getElementById('modal-index').value = i;
+  document.getElementById('modal-platform').value = ch.platform;
+  document.getElementById('modal-roomid').value = ch.roomid;
+  document.getElementById('modal-name').value = ch.name || '';
+  document.getElementById('modal-hide').checked = ch.hide;
+  document.getElementById('modal-enabled').checked = ch.enabled;
+  document.getElementById('modal-index-row').style.display = 'none';
+  document.getElementById('modal-save').textContent = '保存';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+async function saveChannel() {
+  const isAdd = document.getElementById('modal-index-row').style.display !== 'none';
+  const body = {
+    platform: document.getElementById('modal-platform').value,
+    roomid: document.getElementById('modal-roomid').value.trim(),
+    name: document.getElementById('modal-name').value.trim(),
+    hide: document.getElementById('modal-hide').checked,
+    enabled: document.getElementById('modal-enabled').checked,
+  };
+  if (!body.roomid) { alert('请输入房间号'); return; }
+
+  if (isAdd) {
+    const idx = document.getElementById('modal-index-val').value;
+    if (idx !== '') body.index = parseInt(idx);
+    await fetch('/api/' + currentConfig, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+  } else {
+    const i = document.getElementById('modal-index').value;
+    await fetch('/api/' + currentConfig + '/' + i, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+    });
+  }
+  closeModal();
+  fetchList();
+}
+
+// --- operations ---
+
+let _pendingDelete = -1;
+
+function confirmDelete(i) {
+  _pendingDelete = i;
+  document.getElementById('confirm-msg').textContent =
+    '确定删除 「' + (channels[i].name || channels[i].roomid) + '」？';
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  _pendingDelete = -1;
+}
+
+async function doDelete() {
+  const i = _pendingDelete;
+  closeConfirm();
+  await fetch('/api/' + currentConfig + '/' + i, { method: 'DELETE' });
+  fetchList();
+}
+
+document.getElementById('confirm-ok').addEventListener('click', doDelete);
+
+async function toggleChannel(i, on) {
+  channels[i].enabled = on;
+  const tr = document.querySelectorAll('#list tr')[i];
+  if (on) { tr.classList.remove('disabled'); }
+  else { tr.classList.add('disabled'); }
+  await fetch('/api/' + currentConfig + '/' + i, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({enabled: on}),
+  });
+}
+
+// --- drag & drop (custom, mouse-based) ---
+
+let _ghost = null;
+let _startY = 0;
+let _srcIdx = -1;
+let _dstIdx = -1;
+
+function _onDragDown(e, i) {
+  // only respond to left button on the drag handle itself
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  e.preventDefault();
+  _srcIdx = i;
+  _startY = e.clientY;
+  _ghost = tr.cloneNode(true);
+  _ghost.style.position = 'fixed';
+  _ghost.style.zIndex = '200';
+  _ghost.style.pointerEvents = 'none';
+  _ghost.style.width = tr.offsetWidth + 'px';
+  _ghost.style.left = tr.getBoundingClientRect().left + 'px';
+  _ghost.style.top = (e.clientY - 12) + 'px';
+  _ghost.style.opacity = '0.85';
+  _ghost.style.boxShadow = '0 2px 8px rgba(0,0,0,.2)';
+  document.body.appendChild(_ghost);
+  tr.classList.add('dragging');
+  document.addEventListener('mousemove', _onDragMove);
+  document.addEventListener('mouseup', _onDragUp);
+}
+
+function _onDragMove(e) {
+  if (!_ghost) return;
+  _ghost.style.top = (e.clientY - 12) + 'px';
+  const rows = document.querySelectorAll('#list tr');
+  // find insertion by closest row center
+  let bestJ = rows.length - 1;
+  let bestDist = Infinity;
+  for (let j = 0; j < rows.length; j++) {
+    const d = Math.abs(e.clientY - (rows[j].getBoundingClientRect().top + rows[j].offsetHeight / 2));
+    if (d < bestDist) { bestDist = d; bestJ = j; }
+  }
+  _dstIdx = e.clientY < rows[bestJ].getBoundingClientRect().top + rows[bestJ].offsetHeight / 2 ? bestJ : bestJ + 1;
+  // show blue line above the visual insertion point
+  rows.forEach((r, j) => r.classList.toggle('drop-marker', j === _dstIdx - 1));
+}
+
+async function _onDragUp(e) {
+  document.removeEventListener('mousemove', _onDragMove);
+  document.removeEventListener('mouseup', _onDragUp);
+  document.querySelectorAll('#list tr').forEach(r => { r.classList.remove('drop-marker', 'dragging'); });
+  if (_ghost) { _ghost.remove(); _ghost = null; }
+  let toIdx = _dstIdx;
+  if (_srcIdx >= 0 && _srcIdx < toIdx) toIdx -= 1;
+  if (toIdx >= 0 && toIdx !== _srcIdx) {
+    await fetch('/api/' + currentConfig + '/move', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({from: _srcIdx, to: toIdx}),
+    });
+    fetchList();
+  }
+}
+
+// --- init ---
+
+loadConfigs();
+</script>
+</body>
+</html>
