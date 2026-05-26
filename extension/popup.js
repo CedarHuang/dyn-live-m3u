@@ -16,6 +16,10 @@ taskList.addEventListener('change', e => {
   }
 });
 
+document.getElementById('clearLog').addEventListener('click', () => {
+  chrome.runtime.sendMessage({ type: 'clearLogs' }).then(render);
+});
+
 urlInput.addEventListener('change', () => {
   chrome.runtime.sendMessage({ type: 'setUrl', url: urlInput.value.trim() });
 });

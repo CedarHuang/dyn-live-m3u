@@ -206,6 +206,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     });
     return true;
   }
+  if (msg.type === 'clearLogs') {
+    chrome.storage.local.set({ logs: [] }).then(() => sendResponse({ ok: true }));
+    return true;
+  }
   if (msg.type === 'sync') {
     _getState().then(state => {
       const tasks = _buildTasks(state);

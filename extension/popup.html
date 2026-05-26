@@ -24,11 +24,14 @@ input { width: 100%; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4p
 .toggle .slider::before { content: ''; position: absolute; height: 12px; width: 12px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
 .toggle input:checked + .slider { background: #4a90d9; }
 .toggle input:checked + .slider::before { transform: translateX(16px); }
-.log-title { font-size: 11px; color: #888; margin: 12px 0 4px; border-top: 1px solid #eee; padding-top: 8px; }
+.log-title { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #888; margin: 12px 0 4px; border-top: 1px solid #eee; padding-top: 8px; }
 .log { font-size: 10px; color: #aaa; max-height: 100px; overflow-y: auto; line-height: 1.5; }
 .log .entry { border-bottom: 1px solid #f5f5f5; padding: 1px 0; }
 .log .entry.warn { color: #e67e22; }
 .log .entry.err { color: #e74c3c; }
+.log-title span { flex: 1; }
+.btn-clear { padding: 1px 6px; font-size: 10px; border: 1px solid #ddd; border-radius: 3px; cursor: pointer; background: #fff; color: #999; }
+.btn-clear:hover { color: #e74c3c; border-color: #e74c3c; }
 </style>
 </head>
 <body>
@@ -38,7 +41,7 @@ input { width: 100%; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4p
   <input id="urlInput" type="text" placeholder="http://localhost:3658">
 </div>
 <div id="taskList"></div>
-<div class="log-title">事件日志</div>
+<div class="log-title"><span>事件日志</span><button class="btn-clear" id="clearLog">清除</button></div>
 <div class="log" id="log"></div>
 <script src="popup.js"></script>
 </body>
