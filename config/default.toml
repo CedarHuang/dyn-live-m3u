@@ -23,6 +23,8 @@ default = 'http://你的IP:端口/{platform}/{roomid}'
 # https = 'http://127.0.0.1:7890'
 
 # 使用streamlink解析直播流链接时的option, http-proxy会根据[proxies]自动填充
+# [url.option.bilibili]
+# http-cookies = 'SESSDATA=xxx; bili_jct=xxx' # 浏览器登录B站后从Cookie中复制, 用于获取1080P+高画质
 # [url.option.twitch]
 # http-headers = 'Authorization=OAuth鉴权' # 配置鉴权信息可以跳过twitch流中的广告
 
