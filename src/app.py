@@ -52,17 +52,25 @@ def api_move(config):
     return json.dumps(api.move_channel(config, body['from'], body['to']), ensure_ascii=False)
 
 
+@app.route('/api/<config>/cookie', method='POST')
+def api_cookie(config):
+    if config != 'default':
+        bottle.abort(400, 'cookie sync only supported for default config')
+    body = bottle.request.json
+    return json.dumps(api.set_platform_option(config, body['platform'], 'http-cookies', body['cookies']), ensure_ascii=False)
+
+
 # --- pages ---
 
 @app.route('/')
-def api_page():
+def manage_page():
     return bottle.static_file('manage.html', root=os.path.join(os.path.dirname(__file__), 'static'))
 
 
-@app.route('/<config_name>')
-def m3u_entry(config_name='default'):
+@app.route('/<config>')
+def m3u_entry(config='default'):
     bottle.response.content_type = 'text/plain; charset=utf-8'
-    return m3u.process(config_name)
+    return m3u.process(config)
 
 
 @app.route('/<platform>/<roomid>')

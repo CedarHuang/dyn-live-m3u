@@ -118,3 +118,35 @@ def move_channel(config_name, from_idx, to_idx):
         return {'ok': True}
     return {'ok': False, 'error': 'index out of range'}
 
+def set_platform_option(config_name, platform, key, value):
+    path = _config_path(config_name)
+    with open(path, 'r', encoding='utf-8') as f:
+        text = f.read()
+    section = f'[url.option.{platform}]'
+    line = f"{key} = '{value}'"
+    _sec = re.escape(f'url.option.{platform}')
+    pattern = re.compile(
+        r'^[ \t]*#?[ \t]*\[' + _sec + r'\]\s*\n'
+        r'(?:(?!\[[a-z]|^\s*$|^[ \t]*#?[ \t]*\[)[^\n]*\n)*',
+        re.MULTILINE,
+    )
+    m = pattern.search(text)
+
+    # extract current value for comparison
+    current = None
+    if m:
+        val_match = re.search(f"^{key}\\s*=\\s*'([^']*)'", m.group(0), re.MULTILINE)
+        if val_match:
+            current = val_match.group(1)
+
+    if current == value:
+        return {'ok': True, 'synced': False}
+
+    if m:
+        new_block = [section, line]
+        new_text = text[:m.start()] + '\n'.join(new_block) + '\n' + text[m.end():]
+    else:
+        new_text = text.rstrip() + f'\n\n{section}\n{line}\n'
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(new_text)
+    return {'ok': True, 'synced': True}

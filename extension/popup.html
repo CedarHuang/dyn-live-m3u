@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body { width: 300px; padding: 12px; font-family: system-ui, sans-serif; font-size: 13px; }
+h2 { font-size: 14px; margin: 0 0 8px; }
+label { font-size: 11px; color: #666; display: block; margin-bottom: 2px; }
+input { width: 100%; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
+.url-row { margin-bottom: 10px; }
+.task { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid #eee; }
+.task-name { flex: 1; font-weight: 500; }
+.task-status { font-size: 11px; color: #888; min-width: 90px; text-align: right; line-height: 1.4; }
+.task-status.ok { color: #27ae60; }
+.task-status.err { color: #e74c3c; }
+.btn { padding: 3px 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 11px; background: #fff; }
+.btn:hover { background: #f0f0f0; }
+.btn-primary { background: #4a90d9; color: #fff; border-color: #4a90d9; }
+.btn-primary:hover { background: #3a7bc8; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.toggle { display: inline-block; width: 34px; height: 18px; position: relative; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle .slider { position: absolute; cursor: pointer; inset: 0; background: #ccc; border-radius: 9px; transition: background .2s; }
+.toggle .slider::before { content: ''; position: absolute; height: 12px; width: 12px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: transform .2s; }
+.toggle input:checked + .slider { background: #4a90d9; }
+.toggle input:checked + .slider::before { transform: translateX(16px); }
+.log-title { font-size: 11px; color: #888; margin: 12px 0 4px; border-top: 1px solid #eee; padding-top: 8px; }
+.log { font-size: 10px; color: #aaa; max-height: 100px; overflow-y: auto; line-height: 1.5; }
+.log .entry { border-bottom: 1px solid #f5f5f5; padding: 1px 0; }
+.log .entry.warn { color: #e67e22; }
+.log .entry.err { color: #e74c3c; }
+</style>
+</head>
+<body>
+<h2>dyn-live-m3u 同步</h2>
+<div class="url-row">
+  <label>服务地址</label>
+  <input id="urlInput" type="text" placeholder="http://localhost:3658">
+</div>
+<div id="taskList"></div>
+<div class="log-title">事件日志</div>
+<div class="log" id="log"></div>
+<script src="popup.js"></script>
+</body>
+</html>
