@@ -29,7 +29,7 @@ class channel:
         for key in config.toml['re']:
             for re_item in config.toml['re'][key]:
                 try:
-                    self.i[key] = eval('re.sub(%s, self.i[key])' % re_item)
+                    self.i[key] = re.sub(re_item[0], re_item[1], self.i[key])
                 except:
                     pass
         self.i['name'] = config.toml['format']['name'].format(**self.i)
@@ -37,7 +37,7 @@ class channel:
         for key in ['name', 'group']:
             for re_item in config.toml['re'][key]:
                 try:
-                    self.i[key] = eval('re.sub(%s, self.i[key])' % re_item)
+                    self.i[key] = re.sub(re_item[0], re_item[1], self.i[key])
                 except:
                     pass
         res = '#EXTINF:-1 tvg-logo="%s" group-title="%s",%s\n' % (self.i['logo'], self.i['group'], self.i['name'])
