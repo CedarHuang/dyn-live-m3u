@@ -34,7 +34,7 @@ async function render() {
   const logs = state.logs || [];
   logEl.innerHTML = logs.slice(-20).map(l => {
     const cls = l.level === 'warn' ? 'warn' : l.level === 'error' ? 'err' : '';
-    return `<div class="entry ${cls}">${new Date(l.time).toLocaleTimeString('zh-CN')}  ${esc(l.msg)}</div>`;
+    return `<div class="entry ${cls}">${new Date(l.time).toLocaleString('zh-CN')}  ${esc(l.msg)}</div>`;
   }).join('');
   logEl.scrollTop = logEl.scrollHeight;
 
